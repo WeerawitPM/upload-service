@@ -22,6 +22,12 @@ app.post('/upload/userProfile', (req, res) => {
             callback(null, __dirname + '/uploads/userProfiles') // folder ที่เราต้องการเก็บไฟล์
         },
         filename: function (req, file, callback) {
+            // ตรวจสอบชนิดของไฟล์ก่อนที่จะบันทึก
+            if (!file.originalname.match(/\.(jpg|jpeg|png|gif)$/)) {
+                // ถ้าไฟล์ไม่ได้เป็นภาพ ก็สร้าง error และไม่บันทึกไฟล์
+                return callback(new Error('Only image files are allowed!'), false);
+            }
+            
             const username = req.body.username; // ดึงค่า username จากข้อมูลที่ส่งมา
             const originalName = file.originalname; // ชื่อเดิมของไฟล์
             const fileExtension = originalName.split('.').pop(); // นามสกุลของไฟล์
@@ -68,7 +74,7 @@ app.delete('/delete/userProfile', (req, res) => {
             console.error(err);
             return res.status(500).send("Failed to delete image");
         }
-        
+
         res.status(200).send("Image deleted successfully");
     });
 });

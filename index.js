@@ -16,10 +16,24 @@ app.get('/', (req, res) => {
 app.post('/upload', (req, res) => {
     const storage = multer.diskStorage({
         destination: function (req, file, callback) {
-            callback(null, __dirname + '/uploads') // folder ที่เราต้องการเก็บไฟล์
+            callback(null, __dirname + '/uploads/userProfiles') // folder ที่เราต้องการเก็บไฟล์
         },
         filename: function (req, file, callback) {
-            callback(null, file.originalname) //ให้ใช้ชื่อไฟล์ original เป็นชื่อหลังอัพโหลด
+            // ตรวจสอบชนิดของไฟล์ก่อนที่จะบันทึก
+            if (!file.originalname.match(/\.(jpg|jpeg|png|gif)$/)) {
+                // ถ้าไฟล์ไม่ได้เป็นภาพ ก็สร้าง error และไม่บันทึกไฟล์
+                return callback(new Error('Only image files are allowed!'), false);
+            }
+
+            const username = req.body.username; // ดึงค่า username จากข้อมูลที่ส่งมา
+            const originalName = file.originalname; // ชื่อเดิมของไฟล์
+            const fileExtension = originalName.split('.').pop(); // นามสกุลของไฟล์
+
+            // สร้างชื่อไฟล์ใหม่โดยใช้ username และนามสกุลของไฟล์
+            const newFileName = `${username}.${fileExtension}`;
+
+            // ส่งชื่อไฟล์ใหม่กลับไปให้ multer ดำเนินการบันทึกไฟล์
+            callback(null, newFileName);
         },
     })
 
@@ -29,16 +43,13 @@ app.post('/upload', (req, res) => {
             // หากเกิดข้อผิดพลาดในการอัพโหลด
             return res.status(500).send(err);
         }
-        // res.send('File uploaded successfully');
-        // res.send(req.file)
-        // เมื่ออัพโหลดสำเร็จ สร้าง URL ของไฟล์ภาพ
-        const imageUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.originalname}`;
+
+        const imageUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
 
         // ส่ง URL ของไฟล์ภาพกลับไปยังเว็บไซต์ผ่าน API
         res.json({ imageUrl: imageUrl });
     });
 })
-
 
 // ใช้ listen เพื่อระบุว่า website จะทำงานที่ port อะไร เราใช้ให้เรียกตัวแปร port
 app.listen(port, () => {

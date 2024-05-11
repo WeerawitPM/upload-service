@@ -15,6 +15,30 @@ app.get('/', (req, res) => {
     res.sendFile(__dirname + '/index.html')
 })
 
+app.post('/upload/document', (req, res) => {
+    const storage = multer.diskStorage({
+        destination: function (req, file, callback) {
+            callback(null, __dirname + '/uploads/document') // folder ที่เราต้องการเก็บไฟล์
+        },
+        filename: function (req, file, callback) {
+            callback(null, file.originalname) //ให้ใช้ชื่อไฟล์ original เป็นชื่อหลังอัพโหลด
+        },
+    })
+
+    const upload = multer({ storage })
+    upload.single('document')(req, res, function (err) {
+        if (err) {
+            // หากเกิดข้อผิดพลาดในการอัพโหลด
+            return res.status(500).send(err);
+        }
+        // เมื่ออัพโหลดสำเร็จ สร้าง URL ของไฟล์ภาพ
+        const document = `${req.protocol}://${req.get('host')}/uploads/document/${req.file.originalname}`;
+
+        // ส่ง URL ของไฟล์ภาพกลับไปยังเว็บไซต์ผ่าน API
+        res.json({ document: document });
+    });
+})
+
 //ใช้ post เพื่อรองรับการ upload
 app.post('/upload/userProfile', (req, res) => {
     const storage = multer.diskStorage({
@@ -27,7 +51,7 @@ app.post('/upload/userProfile', (req, res) => {
                 // ถ้าไฟล์ไม่ได้เป็นภาพ ก็สร้าง error และไม่บันทึกไฟล์
                 return callback(new Error('Only image files are allowed!'), false);
             }
-            
+
             const username = req.body.username; // ดึงค่า username จากข้อมูลที่ส่งมา
             const originalName = file.originalname; // ชื่อเดิมของไฟล์
             const fileExtension = originalName.split('.').pop(); // นามสกุลของไฟล์

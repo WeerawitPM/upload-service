@@ -12,32 +12,37 @@ app.use('/uploads', express.static(__dirname + '/uploads'));
 
 //ใช้ get เพื่อเรียกไฟล์ index.html
 app.get('/', (req, res) => {
-    res.sendFile(__dirname + '/index.html')
+    res.sendFile(__dirname + '/document.html')
 })
 
-app.post('/upload/document', (req, res) => {
+app.post('/upload/documents', (req, res) => {
     const storage = multer.diskStorage({
         destination: function (req, file, callback) {
-            callback(null, __dirname + '/uploads/document') // folder ที่เราต้องการเก็บไฟล์
+            callback(null, __dirname + '/uploads/documents') // กำหนดโฟลเดอร์สำหรับเก็บไฟล์
         },
         filename: function (req, file, callback) {
-            callback(null, file.originalname) //ให้ใช้ชื่อไฟล์ original เป็นชื่อหลังอัพโหลด
+            callback(null, file.originalname) // ใช้ชื่อไฟล์เดิม
         },
     })
 
     const upload = multer({ storage })
-    upload.single('document')(req, res, function (err) {
+
+    // ใช้ array หรือ fields method แทน single method เพื่อรับหลายไฟล์
+    upload.array('documents', 5)(req, res, function (err) { // กำหนดชื่อใน form ว่า documents
         if (err) {
-            // หากเกิดข้อผิดพลาดในการอัพโหลด
+            // หากเกิดข้อผิดพลาดในการอัปโหลด
             return res.status(500).send(err);
         }
-        // เมื่ออัพโหลดสำเร็จ สร้าง URL ของไฟล์ภาพ
-        const document = `${req.protocol}://${req.get('host')}/uploads/document/${req.file.originalname}`;
+        // หากอัปโหลดสำเร็จ
+
+        // เตรียมข้อมูลเพื่อส่งกลับไปยังเว็บไซต์ผ่าน API
+        const documentUrls = req.files.map(file => `${req.protocol}://${req.get('host')}/uploads/documents/${file.originalname}`);
 
         // ส่ง URL ของไฟล์ภาพกลับไปยังเว็บไซต์ผ่าน API
-        res.json({ document: document });
+        res.json({ documents: documentUrls });
     });
 })
+
 
 //ใช้ post เพื่อรองรับการ upload
 app.post('/upload/userProfile', (req, res) => {

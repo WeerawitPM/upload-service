@@ -15,31 +15,27 @@ app.get('/', (req, res) => {
     res.sendFile(__dirname + '/document.html')
 })
 
-app.post('/upload/documents', (req, res) => {
+app.post('/upload/document/QF-ITC-0001', (req, res) => {
     const storage = multer.diskStorage({
         destination: function (req, file, callback) {
-            callback(null, __dirname + '/uploads/documents') // กำหนดโฟลเดอร์สำหรับเก็บไฟล์
+            callback(null, __dirname + '/uploads/documents/QF-ITC-0001') // folder ที่เราต้องการเก็บไฟล์
         },
         filename: function (req, file, callback) {
-            callback(null, file.originalname) // ใช้ชื่อไฟล์เดิม
+            callback(null, file.originalname) //ให้ใช้ชื่อไฟล์ original เป็นชื่อหลังอัพโหลด
         },
     })
 
     const upload = multer({ storage })
-
-    // ใช้ array หรือ fields method แทน single method เพื่อรับหลายไฟล์
-    upload.array('documents', 5)(req, res, function (err) { // กำหนดชื่อใน form ว่า documents
+    upload.single('document')(req, res, function (err) {
         if (err) {
-            // หากเกิดข้อผิดพลาดในการอัปโหลด
+            // หากเกิดข้อผิดพลาดในการอัพโหลด
             return res.status(500).send(err);
         }
-        // หากอัปโหลดสำเร็จ
-
-        // เตรียมข้อมูลเพื่อส่งกลับไปยังเว็บไซต์ผ่าน API
-        const documentUrls = req.files.map(file => `${req.protocol}://${req.get('host')}/uploads/documents/${file.originalname}`);
+        // เมื่ออัพโหลดสำเร็จ สร้าง URL ของไฟล์ภาพ
+        const document = `${req.protocol}://${req.get('host')}/uploads/documents/QF-ITC-0001/${req.file.originalname}`;
 
         // ส่ง URL ของไฟล์ภาพกลับไปยังเว็บไซต์ผ่าน API
-        res.json({ documents: documentUrls });
+        res.json({ document: document });
     });
 })
 

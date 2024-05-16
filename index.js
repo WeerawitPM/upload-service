@@ -104,7 +104,30 @@ app.delete('/delete/userProfile', (req, res) => {
     });
 });
 
+app.delete('/delete/document/QF-ITC-0001', (req, res) => {
+    const document = req.body.document; // เก็บ URL ของรูปภาพที่จะลบ
 
+    // ตรวจสอบว่า URL ถูกส่งมาหรือไม่
+    if (!document) {
+        return res.status(400).send("Missing document URL");
+    }
+
+    // ดึงชื่อไฟล์จาก URL ด้วยการแยกส่วนที่มีชื่อไฟล์ตั้งแต่ /uploads/userProfiles/ ไปจนถึงสิ้นสุด
+    const fileName = document.split('/').pop();
+
+    // เส้นทางไฟล์ที่ต้องการลบ
+    const filePath = __dirname + '/uploads/documents/QF-ITC-0001/' + fileName;
+
+    // ลบไฟล์โดยใช้ fs.unlink
+    fs.unlink(filePath, (err) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).send("Failed to delete document");
+        }
+
+        res.status(200).send("Document deleted successfully");
+    });
+});
 
 // ใช้ listen เพื่อระบุว่า website จะทำงานที่ port อะไร เราใช้ให้เรียกตัวแปร port
 app.listen(port, () => {

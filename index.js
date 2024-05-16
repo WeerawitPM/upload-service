@@ -32,10 +32,11 @@ app.post('/upload/document/QF-ITC-0001', (req, res) => {
             return res.status(500).send(err);
         }
         // เมื่ออัพโหลดสำเร็จ สร้าง URL ของไฟล์ภาพ
-        const document = `${req.protocol}://${req.get('host')}/uploads/documents/QF-ITC-0001/${req.file.originalname}`;
+        const name = req.file.originalname;
+        const path = `${req.protocol}://${req.get('host')}/uploads/documents/QF-ITC-0001/${req.file.originalname}`;
 
         // ส่ง URL ของไฟล์ภาพกลับไปยังเว็บไซต์ผ่าน API
-        res.json({ document: document });
+        res.json({ name: name, path: path });
     });
 })
 

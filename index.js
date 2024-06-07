@@ -15,6 +15,7 @@ app.get('/', (req, res) => {
     res.sendFile(__dirname + '/document.html')
 })
 
+//QF-ITC-0001
 app.post('/upload/document/QF-ITC-0001', (req, res) => {
     const storage = multer.diskStorage({
         destination: function (req, file, callback) {
@@ -39,9 +40,63 @@ app.post('/upload/document/QF-ITC-0001', (req, res) => {
         res.json({ name: name, path: path });
     });
 })
+app.delete('/delete/document/QF-ITC-0001', (req, res) => {
+    const document = req.body.document; // เก็บ URL ของรูปภาพที่จะลบ
 
+    // ตรวจสอบว่า URL ถูกส่งมาหรือไม่
+    if (!document) {
+        return res.status(400).send("Missing document URL");
+    }
 
-//ใช้ post เพื่อรองรับการ upload
+    // ดึงชื่อไฟล์จาก URL ด้วยการแยกส่วนที่มีชื่อไฟล์ตั้งแต่ /uploads/userProfiles/ ไปจนถึงสิ้นสุด
+    const fileName = document.split('/').pop();
+
+    // เส้นทางไฟล์ที่ต้องการลบ
+    const filePath = __dirname + '/uploads/documents/QF-ITC-0001/' + fileName;
+
+    // ลบไฟล์โดยใช้ fs.unlink
+    fs.unlink(filePath, (err) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).send("Failed to delete document");
+        }
+
+        res.status(200).send("Document deleted successfully");
+    });
+});
+//////////////////////////////////////////////////////////////
+
+//QF-ITC-0003
+app.post('/upload/document/QF-ITC-0003', (req, res) => {
+    const storage = multer.diskStorage({
+        destination: function (req, file, callback) {
+            callback(null, __dirname + '/uploads/documents/QF-ITC-0003'); // folder ที่เราต้องการเก็บไฟล์
+        },
+        filename: function (req, file, callback) {
+            callback(null, file.originalname); // ให้ใช้ชื่อไฟล์ original เป็นชื่อหลังอัพโหลด
+        },
+    });
+
+    const upload = multer({ storage }).any(); // Use .any() to accept files with any name
+    upload(req, res, function (err) {
+        if (err) {
+            // หากเกิดข้อผิดพลาดในการอัพโหลด
+            return res.status(500).send(err);
+        }
+
+        const files = req.files;
+        const response = files.map(file => ({
+            name: file.originalname,
+            path: `${req.protocol}://${req.get('host')}/uploads/documents/QF-ITC-0003/${file.originalname}`
+        }));
+
+        // ส่ง URL ของไฟล์ภาพกลับไปยังเว็บไซต์ผ่าน API
+        res.json(response);
+    });
+});
+//////////////////////////////////////////////////////////////
+
+//userProfile
 app.post('/upload/userProfile', (req, res) => {
     const storage = multer.diskStorage({
         destination: function (req, file, callback) {
@@ -79,7 +134,6 @@ app.post('/upload/userProfile', (req, res) => {
         res.json({ imageUrl: imageUrl });
     });
 })
-
 app.delete('/delete/userProfile', (req, res) => {
     const image = req.body.image; // เก็บ URL ของรูปภาพที่จะลบ
 
@@ -104,31 +158,7 @@ app.delete('/delete/userProfile', (req, res) => {
         res.status(200).send("Image deleted successfully");
     });
 });
-
-app.delete('/delete/document/QF-ITC-0001', (req, res) => {
-    const document = req.body.document; // เก็บ URL ของรูปภาพที่จะลบ
-
-    // ตรวจสอบว่า URL ถูกส่งมาหรือไม่
-    if (!document) {
-        return res.status(400).send("Missing document URL");
-    }
-
-    // ดึงชื่อไฟล์จาก URL ด้วยการแยกส่วนที่มีชื่อไฟล์ตั้งแต่ /uploads/userProfiles/ ไปจนถึงสิ้นสุด
-    const fileName = document.split('/').pop();
-
-    // เส้นทางไฟล์ที่ต้องการลบ
-    const filePath = __dirname + '/uploads/documents/QF-ITC-0001/' + fileName;
-
-    // ลบไฟล์โดยใช้ fs.unlink
-    fs.unlink(filePath, (err) => {
-        if (err) {
-            console.error(err);
-            return res.status(500).send("Failed to delete document");
-        }
-
-        res.status(200).send("Document deleted successfully");
-    });
-});
+//////////////////////////////////////////////////////////////
 
 // ใช้ listen เพื่อระบุว่า website จะทำงานที่ port อะไร เราใช้ให้เรียกตัวแปร port
 app.listen(port, () => {
